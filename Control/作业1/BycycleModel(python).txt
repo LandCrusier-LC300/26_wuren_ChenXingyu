@@ -1,0 +1,44 @@
+import math
+import matplotlib.pyplot as plt
+
+# ===================== 1. 车辆与仿真参数 =====================
+lf = 2.168
+lr = 1.907
+lfr = lf + lr          # 轴距
+sigma = math.radians(5)# 前轮转角 5° 转弧度
+dt = 0.01              # 仿真步长
+v = 30                 # 纵向车速 m/s
+
+# 初始状态：后轴坐标 X,Y ；航向角 phi
+X, Y = 1.0, 10.0
+phi = 0.0
+
+# 存储轨迹数据
+phi_list = []
+X_cm_list = []   # 质心X
+Y_cm_list = []   # 质心Y
+
+# ===================== 2. 仿真循环 =====================
+for _ in range(5000):
+    # 记录当前状态（质心位置）
+    phi_list.append(phi)
+    x_cm = X + lr * math.cos(phi)
+    y_cm = Y + lr * math.sin(phi)
+    X_cm_list.append(x_cm)
+    Y_cm_list.append(y_cm)
+
+    # 自行车运动学模型更新
+    phi_dot = v * math.tan(sigma) / lfr
+    phi = phi + phi_dot * dt
+    X = X + v * math.cos(phi) * dt
+    Y = Y + v * math.sin(phi) * dt
+
+# ===================== 3. 绘图 =====================
+plt.figure(figsize=(8, 6))
+plt.plot(X_cm_list, Y_cm_list, 'b.', markersize=1)
+plt.axis('equal')
+plt.title("Kinematic Bicycle Model")
+plt.xlabel("X [m]")
+plt.ylabel("Y [m]")
+plt.grid(True)
+plt.show()

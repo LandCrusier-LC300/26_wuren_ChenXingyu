@@ -1,0 +1,62 @@
+import math
+import matplotlib.pyplot as plt
+import numpy as np  #用来生成正弦轨迹
+
+lfr = 2.168+1.907
+dt = 0.01
+v = 15
+sim_steps = 2000 #循环次数
+ld = 15  #前视目标点的距离
+
+#正弦轨迹
+x_ref = np.arange(0,200,0.1)
+y_ref = 10*np.sin(x_ref/15)
+#初始车辆状态
+x = x_ref[0]
+y = y_ref[0]+3 #偏离一定距离
+phi = 0.0
+
+#存储每一次的坐标
+x_vec=[]
+y_vec=[]
+
+#开始仿真
+for i in range(sim_steps):
+    x_vec.append(x)
+    y_vec.append(y)
+    #纯跟踪算法：
+    #找距离当前最近的轨迹上的点
+    dist = np.sqrt((x_ref-x)**2+(y_ref-y)**2)#欧式距离
+    idx = np.argmin(dist)
+    #找对应前视点
+    lookahead_idx = idx+round(ld/0.1)
+    lookahead_idx=min(lookahead_idx,len(x_ref)-1)
+    x_target = x_ref[lookahead_idx]
+    y_target = y_ref[lookahead_idx]
+
+    #计算航向角变化角
+    alpha = math.atan2(y_target-y,x_target-x)-phi
+    #前轮转角
+    sigma = math.atan2(2*lfr*math.sin(alpha),ld)
+
+    #车辆运动学状态跟新
+    phi_dot = v*math.tan(sigma)/lfr
+    phi = phi+phi_dot*dt
+    x = x+v*math.cos(phi)*dt
+    y = y+v*math.sin(phi)*dt
+
+    #到达终点退出
+    if x>x_ref[-1]:
+        break
+
+# 绘图
+plt.figure(figsize=(10, 5))
+plt.plot(x_ref, y_ref, 'k--', linewidth=2, label='参考规划轨迹')
+plt.plot(x_vec, y_vec, 'r-', linewidth=2, label='实际行驶轨迹')
+plt.title(f'Pure Pursuit 跟踪 (Ld = {ld} m)')
+plt.xlabel('X [m]')
+plt.ylabel('Y [m]')
+plt.axis('equal')
+plt.grid(True)
+plt.legend()
+plt.show()
